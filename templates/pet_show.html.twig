@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h2>Pet details</h2>
+    <pre>{{ pet|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+
+    <a href="{{ path('pet_edit', {id: pet.id}) }}" class="btn btn-warning">Edit</a>
+    <a href="{{ path('pet_delete', {id: pet.id}) }}" class="btn btn-danger">Delete</a>
+    <a href="{{ path('home') }}" class="btn btn-secondary">Back</a>
+{% endblock %}

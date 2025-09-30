@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h2>Petstore CRUD</h2>
+
+    <div class="mb-3">
+        <form method="get" action="{{ path('pet_find') }}">
+            <label for="petId">Find Pet by ID:</label>
+            <input type="number" name="id" id="petId" class="form-control" placeholder="Enter ID" required>
+            <button type="submit" class="btn btn-primary mt-2">Search</button>
+        </form>
+    </div>
+
+    <a href="{{ path('pet_add') }}" class="btn btn-success">Add Pet</a>
+{% endblock %}
