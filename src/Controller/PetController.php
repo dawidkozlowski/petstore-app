@@ -22,19 +22,12 @@ class PetController extends AbstractController
     public function find(Request $request): Response
     {
         $id = $request->query->getInt('id');
-        if ($id <= 0) {
-            $this->addFlash('danger', 'Please enter a valid Pet ID (must be a positive number)');
-            return $this->redirectToRoute('home');
+        if ($id > 0) {
+            return $this->redirectToRoute('pet_show', ['id' => $id]);
         }
 
-        try {
-            // Verify the pet exists before redirecting
-            $this->api->getPet($id);
-            return $this->redirectToRoute('pet_show', ['id' => $id]);
-        } catch (\Throwable $e) {
-            $this->addFlash('danger', "Error finding Pet $id: " . $e->getMessage());
-            return $this->redirectToRoute('home');
-        }
+        $this->addFlash('danger', 'Please enter a valid Pet ID');
+        return $this->redirectToRoute('home');
     }
 
     #[Route('/pet/{id}', name: 'pet_show', methods: ['GET'], requirements: ['id' => '\d+'])]
@@ -58,12 +51,6 @@ class PetController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             try {
                 $response = $this->api->addPet($form->getData());
-
-                // Validate response
-                if (!is_array($response)) {
-                    throw new \Exception('Invalid response from API');
-                }
-
                 $id = (int) ($response['id'] ?? 0);
 
                 if ($id > 0) {
@@ -75,11 +62,6 @@ class PetController extends AbstractController
                 return $this->redirectToRoute('home');
             } catch (\Throwable $e) {
                 $this->addFlash('danger', 'Error adding Pet: ' . $e->getMessage());
-                // Return to form view with error message instead of redirecting
-                return $this->render('pet_form.html.twig', [
-                    'form' => $form->createView(),
-                    'action' => 'Add'
-                ]);
             }
         }
 
@@ -94,16 +76,11 @@ class PetController extends AbstractController
     {
         try {
             $pet = $this->api->getPet($id);
-
-            // Validate pet data
-            if (!is_array($pet)) {
-                throw new \Exception('Invalid response from API');
-            }
-        } catch (\Throwable $e) {
-            $this->addFlash('danger', "Error finding Pet $id: " . $e->getMessage());
+        } catch (\Throwable) {
+            $this->addFlash('danger', "Pet $id not found!");
             return $this->redirectToRoute('home');
         }
-
+//        dd($pet);
         // Extract only the fields needed for the form
         $petData = [
             'id' => $pet['id'] ?? null,
@@ -117,23 +94,12 @@ class PetController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             try {
                 $response = $this->api->updatePet($form->getData());
-
-                // Validate response
-                if (!is_array($response)) {
-                    throw new \Exception('Invalid response from API');
-                }
-
                 $newId = (int) ($response['id'] ?? $id);
 
                 $this->addFlash('success', "Pet $newId updated!");
                 return $this->redirectToRoute('pet_show', ['id' => $newId]);
             } catch (\Throwable $e) {
                 $this->addFlash('danger', 'Error updating Pet: ' . $e->getMessage());
-                // Return to form view with error message instead of redirecting
-                return $this->render('pet_form.html.twig', [
-                    'form' => $form->createView(),
-                    'action' => 'Edit'
-                ]);
             }
         }
 
@@ -146,31 +112,13 @@ class PetController extends AbstractController
     #[Route('/pet/delete/{id}', name: 'pet_delete', requirements: ['id' => '\d+'])]
     public function delete(int $id, Request $request): Response
     {
-        // First verify the pet exists before showing the delete confirmation
-        if (!$request->isMethod('POST')) {
-            try {
-                $this->api->getPet($id);
-            } catch (\Throwable $e) {
-                $this->addFlash('danger', "Pet $id not found: " . $e->getMessage());
-                return $this->redirectToRoute('home');
-            }
-        }
-
         if ($request->isMethod('POST')) {
             try {
-                $response = $this->api->deletePet($id);
-
-                // Validate response if needed
-                if (!is_array($response)) {
-                    throw new \Exception('Invalid response from API');
-                }
-
+                $this->api->deletePet($id);
                 $this->addFlash('success', "Pet $id deleted!");
                 return $this->redirectToRoute('home');
             } catch (\Throwable $e) {
                 $this->addFlash('danger', "Error deleting Pet $id: " . $e->getMessage());
-                // Return to delete confirmation with error message
-                return $this->render('pet_delete.html.twig', ['id' => $id, 'error' => $e->getMessage()]);
             }
         }
 

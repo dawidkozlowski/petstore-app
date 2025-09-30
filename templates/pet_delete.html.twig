@@ -2,13 +2,6 @@
 
 {% block body %}
     <h2>Delete Pet</h2>
-
-    {% if error is defined %}
-        <div class="alert alert-danger">
-            {{ error }}
-        </div>
-    {% endif %}
-
     <p>Are you sure you want to delete pet with ID {{ id }}?</p>
     <form method="post">
         <button class="btn btn-danger">Yes, delete</button>
